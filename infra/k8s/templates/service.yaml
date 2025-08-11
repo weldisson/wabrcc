@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${TENANT}-svc
+  namespace: ${NAMESPACE}
+  labels:
+    app.kubernetes.io/name: ${TENANT}-app
+spec:
+  selector:
+    app.kubernetes.io/name: ${TENANT}-app
+  ports:
+    - name: http
+      port: 80
+      targetPort: 5000
+
+

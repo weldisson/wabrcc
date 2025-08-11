@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${TENANT}-app
+  namespace: ${NAMESPACE}
+  labels:
+    app.kubernetes.io/name: ${TENANT}-app
+    app.kubernetes.io/tenant: ${TENANT}
+spec:
+  replicas: ${REPLICAS}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ${TENANT}-app
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ${TENANT}-app
+        app.kubernetes.io/tenant: ${TENANT}
+    spec:
+      containers:
+        - name: web
+          image: ${IMAGE_FULL}
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: "5000"
+            - name: DATABASE_URL
+              value: ${DATABASE_URL}
+            - name: CORS_ORIGIN
+              value: https://${HOST}
+          ports:
+            - containerPort: 5000
+              name: http
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/uploads
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 5000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+      volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: ${TENANT}-uploads
+
+

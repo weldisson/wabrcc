@@ -1,0 +1,4 @@
+[submodule "healthProfessionalSite"]
+	path = healthProfessionalSite
+	url = https://github.com/weldisson/healthProfissionalSite.git
+	branch = main

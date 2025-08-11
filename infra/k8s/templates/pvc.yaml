@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ${TENANT}-uploads
+  namespace: ${NAMESPACE}
+  labels:
+    app.kubernetes.io/name: ${TENANT}-app
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+
