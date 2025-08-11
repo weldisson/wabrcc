@@ -13,8 +13,9 @@ Prerequisites
   - Value: 54.237.179.146
 - Open inbound ports 80 and 443 on the Lightsail firewall
 
-Install k3s and base tools (run on the server)
+Install Docker (if needed) and k3s (run on the server)
 ```bash
+sudo bash ./scripts/install_docker.sh
 sudo bash ./scripts/install_k3s.sh
 ```
 
@@ -31,6 +32,31 @@ export DATABASE_URL_PREFIX="postgresql://postgres:xxx@free-database.cukfpauavjwz
 
 # Example: drjoao.wabr.cc
 ./scripts/deploy_tenant.sh drjoao 2 wabr.cc
+```
+
+Create database per tenant (optional)
+```bash
+export DATABASE_ADMIN_URL="postgresql://postgres:xxx@free-database.cukfpauavjwz.us-east-1.rds.amazonaws.com:5432/postgres"
+./scripts/create_tenant_db.sh weldisson
+./scripts/create_tenant_db.sh drjoao
+```
+
+Delete a tenant
+```bash
+./scripts/delete_tenant.sh weldisson
+```
+
+Git submodule (healthProfessionalSite)
+```bash
+# Initialize submodule if fresh clone
+git submodule update --init --recursive
+
+# Pull latest from submodule main
+git -C healthProfessionalSite pull origin main
+
+# Switch submodule revision (optional)
+git -C healthProfessionalSite checkout <branch|tag|commit>
+git add healthProfessionalSite && git commit -m "chore: bump submodule"
 ```
 
 Script arguments
@@ -52,5 +78,10 @@ Notes
 - Traefik is enabled by default in k3s; we use standard Kubernetes Ingress
 - For TLS/HTTPS automation, integrate cert-manager + Let’s Encrypt later
 - To update a tenant after code changes: rerun the same `deploy_tenant.sh TENANT` (it will rebuild and roll pods)
+
+Troubleshooting
+- If image not found by k3s: ensure the script step "Importing image into k3s containerd" ran successfully.
+- If Ingress not routing: check DNS and `kubectl -n kube-system get svc traefik` external IP/ports.
+- App health: `kubectl -n tenant-<tenant> logs -l app.kubernetes.io/name=<tenant>-app -f`
 
 
