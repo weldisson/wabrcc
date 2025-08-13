@@ -23,19 +23,19 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - name: NODE_ENV
-              value: production
+              value: "production"
             - name: PORT
               value: "5000"
             - name: DATABASE_URL
-              value: ${DATABASE_URL}
+              value: "${DATABASE_URL}"
             - name: DATABASE_SSL
-              value: ${DATABASE_SSL}
+              value: "${DATABASE_SSL}"
             - name: DATABASE_SSL_REJECT_UNAUTHORIZED
-              value: ${DATABASE_SSL_REJECT_UNAUTHORIZED}
+              value: "${DATABASE_SSL_REJECT_UNAUTHORIZED}"
             - name: DATABASE_SSL_CA_PATH
-              value: ${DATABASE_SSL_CA_PATH}
+              value: "${DATABASE_SSL_CA_PATH}"
             - name: CORS_ORIGIN
-              value: https://${HOST}
+              value: "https://${HOST}"
           ports:
             - containerPort: 5000
               name: http
