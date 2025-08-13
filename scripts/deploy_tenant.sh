@@ -32,12 +32,20 @@ HOST="${TENANT}.${DOMAIN_BASE}"
 NAMESPACE="tenant-${TENANT}"
 DATABASE_URL="${DATABASE_URL_PREFIX}${TENANT}"
 
+# SSL defaults for runtime (can be overridden by env before calling the script)
+DATABASE_SSL=${DATABASE_SSL:-true}
+DATABASE_SSL_REJECT_UNAUTHORIZED=${DATABASE_SSL_REJECT_UNAUTHORIZED:-true}
+DATABASE_SSL_CA_PATH=${DATABASE_SSL_CA_PATH:-/app/rds-bundle.pem}
+
 export TENANT
 export HOST
 export NAMESPACE
 export REPLICAS
 export IMAGE_FULL
 export DATABASE_URL
+export DATABASE_SSL
+export DATABASE_SSL_REJECT_UNAUTHORIZED
+export DATABASE_SSL_CA_PATH
 
 echo "[1/6] Building image ${IMAGE_FULL} from ./healthProfessionalSite ..."
 docker build -t "${IMAGE_FULL}" ./healthProfessionalSite

@@ -19,15 +19,21 @@ sudo bash ./scripts/install_docker.sh
 sudo bash ./scripts/install_k3s.sh
 ```
 
-Configure database URL base
-- The deploy script expects an environment variable `DATABASE_URL_PREFIX` like:
+Configure database URL base e SSL
+- Exporte `DATABASE_URL_PREFIX` (o script monta `DATABASE_URL` como PREFIX+TENANT):
   - postgresql://postgres:YOUR_PASSWORD@your-rds-host:5432/
-- The script will append the tenant name to build the final `DATABASE_URL`.
+- SSL (opcional, com defaults):
+  - `DATABASE_SSL=true`
+  - `DATABASE_SSL_REJECT_UNAUTHORIZED=true`
+  - `DATABASE_SSL_CA_PATH=/app/rds-bundle.pem` (monte o arquivo no container se usar CA)
 
 Deploy a tenant (run on the server)
 ```bash
-# Example: weldisson.wabr.cc
+# Example: weldisson.wabr.cc (com SSL estrito e CA)
 export DATABASE_URL_PREFIX="postgresql://postgres:xxx@free-database.cukfpauavjwz.us-east-1.rds.amazonaws.com:5432/"
+export DATABASE_SSL=true
+export DATABASE_SSL_REJECT_UNAUTHORIZED=true
+export DATABASE_SSL_CA_PATH=/app/rds-bundle.pem
 ./scripts/deploy_tenant.sh weldisson 2 wabr.cc
 
 # Example: drjoao.wabr.cc
