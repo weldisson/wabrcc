@@ -4,6 +4,7 @@ set -euo pipefail
 # Deploy a tenant as its own namespace with dedicated Deployment/Service/Ingress
 # Usage: ./scripts/deploy_tenant.sh TENANT [REPLICAS] [DOMAIN_BASE]
 # Requires: k3s installed on host; docker available to build image; env var DATABASE_URL_PREFIX set
+# Optional: INIT_DB=true will also create the tenant database (requires DATABASE_ADMIN_URL)
 
 TENANT=${1:-}
 REPLICAS=${2:-2}
@@ -37,6 +38,11 @@ DATABASE_SSL=${DATABASE_SSL:-true}
 DATABASE_SSL_REJECT_UNAUTHORIZED=${DATABASE_SSL_REJECT_UNAUTHORIZED:-true}
 DATABASE_SSL_CA_PATH=${DATABASE_SSL_CA_PATH:-/app/rds-bundle.pem}
 
+# Optional DB initialization controls
+INIT_DB=${INIT_DB:-false}
+DEFAULT_ADMIN_EMAIL=${DEFAULT_ADMIN_EMAIL:-"admin@${TENANT}.${DOMAIN_BASE}"}
+DEFAULT_ADMIN_PASSWORD=${DEFAULT_ADMIN_PASSWORD:-"ChangeMe123!"}
+
 export TENANT
 export HOST
 export NAMESPACE
@@ -52,6 +58,33 @@ docker build -t "${IMAGE_FULL}" ./healthProfessionalSite
 
 echo "[2/6] Importing image into k3s containerd..."
 docker save "${IMAGE_FULL}" | sudo k3s ctr images import -
+
+# [2.5/6] Optionally create DB and initialize schema/data
+if [ "${INIT_DB}" = "true" ]; then
+  echo "[2.5/6] INIT_DB=true - Creating database '${TENANT}' and running db-init..."
+  if [[ -z "${DATABASE_ADMIN_URL:-}" ]]; then
+    echo "ERROR: DATABASE_ADMIN_URL not set. Example: export DATABASE_ADMIN_URL='postgresql://postgres:xxx@host:5432/postgres'" >&2
+    exit 1
+  fi
+  # Create database if not exists (using postgres client image)
+  ./scripts/create_tenant_db.sh "${TENANT}"
+
+  # Run db-init.ts inside a Node container with CA bundle
+  docker run --rm \
+    -e DATABASE_URL="${DATABASE_URL}" \
+    -e DATABASE_SSL="${DATABASE_SSL}" \
+    -e DATABASE_SSL_REJECT_UNAUTHORIZED="${DATABASE_SSL_REJECT_UNAUTHORIZED}" \
+    -e DATABASE_SSL_CA_PATH=/tmp/rds-bundle.pem \
+    -e DEFAULT_ADMIN_EMAIL="${DEFAULT_ADMIN_EMAIL}" \
+    -e DEFAULT_ADMIN_PASSWORD="${DEFAULT_ADMIN_PASSWORD}" \
+    -v "$PWD/healthProfessionalSite":/app \
+    -w /app node:20-alpine sh -lc "\
+      set -e; \
+      apk add --no-cache curl python3 make g++; \
+      curl -s https://truststore.pki.rds.amazonaws.com/us-east-1/us-east-1-bundle.pem -o /tmp/rds-bundle.pem; \
+      (npm ci || npm i); \
+      npx tsx server/db-init.ts"
+fi
 
 echo "[3/6] Rendering Kubernetes manifests..."
 WORKDIR="$(mktemp -d)"

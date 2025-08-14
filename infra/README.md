@@ -47,6 +47,17 @@ export DATABASE_ADMIN_URL="postgresql://postgres:xxx@free-database.cukfpauavjwz.
 ./scripts/create_tenant_db.sh drjoao
 ```
 
+Auto-initialize database during deploy (optional)
+```bash
+# Creates DB and runs db-init (with default admin). Requires DATABASE_ADMIN_URL
+export INIT_DB=true
+export DATABASE_ADMIN_URL="postgresql://postgres:xxx@free-database.cukfpauavjwz.us-east-1.rds.amazonaws.com:5432/postgres"
+# Optionally override initial admin credentials
+export DEFAULT_ADMIN_EMAIL="admin@drjoao.com"
+export DEFAULT_ADMIN_PASSWORD="TroqueEstaSenha123!"
+./scripts/deploy_tenant.sh drjoao 2 wabr.cc
+```
+
 Delete a tenant
 ```bash
 ./scripts/delete_tenant.sh weldisson
